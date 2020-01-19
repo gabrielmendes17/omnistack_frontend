@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import api from './services/api';
 import './App.css';
 import './global.css';
 import './App.css';
@@ -7,10 +8,12 @@ import './Main.css';
 
 function App() {
 
+  const [devs, setDevs] = useState([]);
   const [github_username, setGithubUsername] = useState('');
   const [techs, setTechs] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
+
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -28,16 +31,35 @@ function App() {
     )
   }, []);
 
+  useEffect(() => {
+    async function loadDevs() {
+      const response = await api.get('/devs');
+      setDevs(response.data);
+      console.log(response.data);
+    }
+    loadDevs();
+  }, []);
+
   async function handleAddDev(e) {
     e.preventDefault();
+    console.log('handleAddDev');
+    const response = await api.post('/devs', {
+      github_username,
+      techs,
+      latitude,
+      longitude
+    });
+    setTechs('');
+    setGithubUsername('');
 
+    setDevs([...devs, response.data])
   }
   return (
     <div id="app">
       <aside>
         <strong>Cadastrar</strong>
 
-        <form>
+        <form onSubmit={handleAddDev}>
           <div className="input-block">
             <label htmlFor="">Usuário do Github</label>
             <input 
@@ -86,50 +108,19 @@ function App() {
       </aside>
       <main>
         <ul>
-          <li className="dev-item">
+          {devs.map(dev => (
+          <li key={dev._id} className="dev-item">
             <header>
-              <img src="https://avatars1.githubusercontent.com/u/20521378?s=460&v=4" alt="Gabriel Mendes"></img>
+              <img src={dev.avatar_url} alt="Gabriel Mendes"></img>
               <div className="user-info">
-                <strong className="user-info">Gabriel Mendes</strong>
-                <span>ReactJS, React Native, NodeJS</span>
+                <strong className="user-info">{dev.name}</strong>
+                <span>{dev.techs.join(', ')}</span>
               </div>
             </header>
-            <p>CTO na @Rocketseat. Apaixonado pelas mehlores tecnolodias de desenvolvimento web e mobile</p>
-            <a href="https://github.com/gabrielmende17">Acessar perfil no github</a>
+            <p>{dev.bio}</p>
+            <a href={`https://github.com/${dev.github_username}`}>Acessar perfil no github</a>
           </li>
-          <li className="dev-item">
-            <header>
-              <img src="https://avatars1.githubusercontent.com/u/20521378?s=460&v=4" alt="Gabriel Mendes"></img>
-              <div className="user-info">
-                <strong className="user-info">Gabriel Mendes</strong>
-                <span>ReactJS, React Native, NodeJS</span>
-              </div>
-            </header>
-            <p>CTO na @Rocketseat. Apaixonado pelas mehlores tecnolodias de desenvolvimento web e mobile</p>
-            <a href="https://github.com/gabrielmende17">Acessar perfil no github</a>
-          </li>
-          <li className="dev-item">
-            <header>
-              <img src="https://avatars1.githubusercontent.com/u/20521378?s=460&v=4" alt="Gabriel Mendes"></img>
-              <div className="user-info">
-                <strong className="user-info">Gabriel Mendes</strong>
-                <span>ReactJS, React Native, NodeJS</span>
-              </div>
-            </header>
-            <p>CTO na @Rocketseat. Apaixonado pelas mehlores tecnolodias de desenvolvimento web e mobile</p>
-            <a href="https://github.com/gabrielmende17">Acessar perfil no github</a>
-          </li>
-          <li className="dev-item">
-            <header>
-              <img src="https://avatars1.githubusercontent.com/u/20521378?s=460&v=4" alt="Gabriel Mendes"></img>
-              <div className="user-info">
-                <strong className="user-info">Gabriel Mendes</strong>
-                <span>ReactJS, React Native, NodeJS</span>
-              </div>
-            </header>
-            <p>CTO na @Rocketseat. Apaixonado pelas mehlores tecnolodias de desenvolvimento web e mobile</p>
-            <a href="https://github.com/gabrielmende17">Acessar perfil no github</a>
-          </li>
+          ))}
         </ul>
       </main>
     </div>
